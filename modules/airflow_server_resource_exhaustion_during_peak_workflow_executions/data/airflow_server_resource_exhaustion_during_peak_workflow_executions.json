@@ -1,0 +1,178 @@
+{
+  "name": "airflow_server_resource_exhaustion_during_peak_workflow_executions",
+  "description": "This incident type describes an issue where the Airflow server, which is used to manage and schedule workflows, is running out of resources, such as CPU, memory, or disk space, during periods of high workflow executions. This can cause delays in workflow execution or even complete failures. It is important to monitor the server's resource usage and allocate sufficient resources to ensure smooth and uninterrupted workflow execution.",
+  "params": [
+    {
+      "name": "INSTANCE_NAME",
+      "value": ""
+    },
+    {
+      "name": "REGION_RESOURCE_GROUP_PROJECT_NAME",
+      "value": ""
+    },
+    {
+      "name": "THRESHOLD",
+      "value": ""
+    },
+    {
+      "name": "INSTANCE_IP",
+      "value": ""
+    },
+    {
+      "name": "ZONE_NAME",
+      "value": ""
+    },
+    {
+      "name": "RESOURCE_LIMIT",
+      "value": ""
+    },
+    {
+      "name": "NEW_INSTANCE_TYPE",
+      "value": ""
+    },
+    {
+      "name": "CLOUD_PROVIDER",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Airflow server resource exhaustion during peak workflow executions.\nThis incident type describes an issue where the Airflow server, which is used to manage and schedule workflows, is running out of resources, such as CPU, memory, or disk space, during periods of high workflow executions. This can cause delays in workflow execution or even complete failures. It is important to monitor the server's resource usage and allocate sufficient resources to ensure smooth and uninterrupted workflow execution."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if there are any zombie processes"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps aux | grep Z`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check CPU usage"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `top -b -n 1 | head -n 20`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check memory usage"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `free -h`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check disk space usage"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Airflow logs for errors or warnings"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -n 100 /var/log/airflow/*.log`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Airflow configuration for resource limits"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep -R \"${RESOURCE_LIMIT}\" /etc/airflow/`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Airflow workers are consuming too many resources"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps -aux | grep airflow-worker | awk '{print $2, $4, $11}' | sort -k2 -r`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if there are any blocked I/O operations"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `iotop -obn2`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Airflow server is running on a machine with insufficient resources, such as low memory or CPU capacity, to handle peak workflow loads."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_check_memory_cpu_usage($THRESHOLD)"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Scaling up server resources: One possible remediation strategy is to increase the resources available to the Airflow server during peak execution periods. This can be done by adding more CPU, memory, or disk space to the server or by moving to a more powerful server altogether."
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_change_instance_type($INSTANCE_NAME, $REGION_RESOURCE_GROUP_PROJECT_NAME, $INSTANCE_IP, $ZONE_NAME, $NEW_INSTANCE_TYPE, $CLOUD_PROVIDER)"
+    }
+  ]
+}
